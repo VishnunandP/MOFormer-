@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # MOFormer
 
 <strong>MOFormer: Self-Supervised Transformer model for Metal-Organic Framework Property Prediction</strong> </br>
@@ -85,3 +86,6 @@ We also provide a jupyter notebook `demo.ipynb` for finetuning/supervised traini
 
 #### Questions about the code
 The graduate students who worked on the paper have graduated from CMU. We monitor the github repository regularly, please feel free raise github issues for questions or concerns about the code. It makes it easier for us to handle the code requests.  
+=======
+# MOFormer-
+>>>>>>> d444a429bf50171f7b5f17f3e9e8f71d93780f4b
