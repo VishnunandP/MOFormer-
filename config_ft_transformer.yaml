@@ -23,9 +23,9 @@ dataloader:
 
 dataset:
   data_name: 'PS_Usable_Hydrogen_Storage'
-  dataPath: './path_to_dataset/PS_Usable_Hydrogen_Storgae_Capaciti_GCMC.xlsx' # Adjust this path to match the exact location in the repo
-  feature_columns: ['column1', 'column2', 'column3']  # Replace with actual feature column names
-  target_column: 'target_column_name'                # Replace with actual target column name
+  dataPath: 'PS_Usable_Hydrogen_Storgae_Capaciti_GCMC.xlsx' # Adjust this path to match the exact location in the repo
+  feature_columns: ['Density (g/cm3)', 'Gravimetric Surfcae Area (m2/g)', 'Volumetric Surface Area (m2/cm3)', 'Void Fraction', 'Pore Volume (cm3/g)', 'Largest Cavity Diameter (Å)', 'Pore Limiting Diameter (Å)']  # Replace with actual feature column names
+  target_column: 'Usable Volumetric Hydrogen Capacity at 77K for the pressure swing between 100 and 5 bar (g/L)'                # Replace with actual target column name
 
 Transformer:
   ntoken: 4021        # Adjust if using a different tokenizer or input size
