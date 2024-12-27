@@ -51,11 +51,11 @@ class FineTune(object):
 
         self.random_seed = self.config['dataloader']['randomSeed']
 
-        # self.mofdata = np.load(self.config['dataset']['dataPath'], allow_pickle=True)
-        with open(self.config['dataset']['dataPath']) as f:
-            reader = csv.reader(f)
-            self.mofdata = [row for row in reader]
-        self.mofdata = np.array(self.mofdata)
+        self.data = pd.read_excel(self.config['dataset']['dataPath'])
+        self.feature_columns = self.config['dataset']['feature_columns']
+        self.target_column = self.config['dataset']['target_column']
+
+       
         self.vocab_path = self.config['vocab_path']
         self.tokenizer = MOFTokenizer(self.vocab_path, model_max_length = 512, padding_side='right')
 
@@ -336,12 +336,6 @@ if __name__ == "__main__":
     print(config)
     config['dataloader']['randomSeed'] = args.seed
 
-    if 'hMOF' in config['dataset']['data_name']:
-        # task_name = 'hMOF'
-        task_name = config['dataset']['data_name']
-        pressure = config['dataset']['data_name'].split('_')[-1]
-    if 'QMOF' in config['dataset']['data_name']:
-        task_name = 'QMOF'
 
     # ftf: finetuning from
     # ptw: pre-trained with
@@ -355,9 +349,10 @@ if __name__ == "__main__":
     seed = config['dataloader']['randomSeed']
 
     log_dir = os.path.join(
-        'training_results/finetuning/Transformer',
-        'Trans_{}_{}_{}'.format(ptw,task_name,seed)
+    'training_results/finetuning/Transformer',
+    f'Trans_{config["dataset"]["data_name"]}_{args.seed}'
     )
+
 
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
