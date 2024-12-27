@@ -3,10 +3,9 @@ import numpy as np
 import pandas as pd
 import torch
 from torch.utils.data import DataLoader
-from model.utils import split_data
-from model.transformer import Transformer, TransformerRegressor
-
-from model.dataset import CustomDataset
+from src.model.utils import split_data
+from src.model.transformer import Transformer, TransformerRegressor
+from src.model.dataset import CustomDataset
 from src.model.training import train, validate
 
 
@@ -39,7 +38,7 @@ class FineTune:
         self.test_loader = DataLoader(self.test_dataset, batch_size=self.config['training']['batchSize'], shuffle=False)
 
         # Initialize model
-        self.model = TransformerModel(self.config['model'])
+        self.model = Transformer(self.config['model'])  # Updated to match Transformer initialization
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model.to(self.device)
 
