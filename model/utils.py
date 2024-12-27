@@ -96,6 +96,41 @@ def split_data_subset(data, test_ratio, valid_ratio, subset_size=500, randomSeed
     train_idx = np.random.choice(indices[:train_size], size=subset_size, replace=False)
     valid_idx, test_idx = indices[-(valid_size + test_size):-test_size], indices[-test_size:]
 
+def train(model, data_loader, optimizer, criterion, device):
+    model.train()  # Set the model to training mode
+    total_loss = 0
+
+    for batch in data_loader:
+        inputs, labels = batch
+        inputs, labels = inputs.to(device), labels.to(device)
+
+        optimizer.zero_grad()  # Clear previous gradients
+        outputs = model(inputs)  # Forward pass
+        loss = criterion(outputs, labels)  # Compute loss
+        loss.backward()  # Backward pass
+        optimizer.step()  # Update parameters
+
+        total_loss += loss.item()
+
+    return total_loss / len(data_loader)
+
+
+def validate(model, data_loader, criterion, device):
+    model.eval()  # Set the model to evaluation mode
+    total_loss = 0
+
+    with torch.no_grad():  # Disable gradient computation
+        for batch in data_loader:
+            inputs, labels = batch
+            inputs, labels = inputs.to(device), labels.to(device)
+
+            outputs = model(inputs)  # Forward pass
+            loss = criterion(outputs, labels)  # Compute loss
+            total_loss += loss.item()
+
+    return total_loss / len(data_loader)
+
+
 
 
     return data[train_idx], data[valid_idx], data[test_idx]
