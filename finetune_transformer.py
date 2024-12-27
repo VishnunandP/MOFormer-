@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 from model.utils import split_data
 from model.transformer import Transformer, TransformerRegressor
 from model.dataset import CustomDataset
-from model.training import train, validate
+from model.utils import train, validate
 
 
 class FineTune:
