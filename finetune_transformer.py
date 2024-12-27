@@ -1,128 +1,101 @@
-from tokenizer.mof_tokenizer import MOFTokenizer
-from model.transformer import TransformerRegressor, Transformer, regressoionHead
-from model.utils import *
-from datetime import datetime, timedelta
-from time import time
-from torch.utils.data import dataset, DataLoader
-
 import os
-import csv
-import yaml
-import shutil
-import argparse
-import sys
-import time
-import warnings
 import numpy as np
 import pandas as pd
-from random import sample
-from sklearn import metrics
-from datetime import datetime
-
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-from torch.autograd import Variable
-from torch.optim.lr_scheduler import CosineAnnealingLR
-from torch.utils.tensorboard import SummaryWriter
-from dataset.dataset_finetune_transformer import MOF_ID_Dataset
+from torch.utils.data import DataLoader
+from model.utils import split_data
+from model.transformer import TransformerModel
+from model.dataset import CustomDataset
+from model.training import train, validate
 
-warnings.simplefilter("ignore")
-
-
-def _save_config_file(model_checkpoints_folder):
-    if not os.path.exists(model_checkpoints_folder):
-        os.makedirs(model_checkpoints_folder)
-        shutil.copy('./config_ft_transformer.yaml', os.path.join(model_checkpoints_folder, 'config_ft_transformer.yaml'))
-
-
-class FineTune(object):
+class FineTune:
     def __init__(self, config, log_dir):
         self.config = config
-        self.device = self._get_device()
-        self.writer = SummaryWriter(log_dir=log_dir)
+        self.log_dir = log_dir
 
-        self.random_seed = self.config['dataloader']['randomSeed']
-
-        # Load dataset
+        # Load data
         self.data = pd.read_excel(self.config['dataset']['dataPath'])
-        self.feature_columns = self.config['dataset']['feature_columns']
-        self.target_column = self.config['dataset']['target_column']
 
-        # Tokenizer
-        self.vocab_path = self.config['vocab_path']
-        self.tokenizer = MOFTokenizer(self.vocab_path, model_max_length=512, padding_side='right')
+        # Ensure consistent indexing
+        self.data.reset_index(drop=True, inplace=True)
 
-        # Split data
-        valid_ratio = self.config['dataloader']['valid_ratio']
-        test_ratio = self.config['dataloader']['test_ratio']
-
+        # Split data into train, validation, and test sets
         self.train_data, self.valid_data, self.test_data = split_data(
-            self.data, valid_ratio=valid_ratio, test_ratio=test_ratio, randomSeed=self.random_seed
+            self.data,
+            valid_ratio=self.config['dataset']['validRatio'],
+            test_ratio=self.config['dataset']['testRatio'],
+            randomSeed=self.config['dataset']['randomSeed']
         )
 
-        # Create datasets and loaders
-        self.train_dataset = MOF_ID_Dataset(data=self.train_data, tokenizer=self.tokenizer)
-        self.valid_dataset = MOF_ID_Dataset(data=self.valid_data, tokenizer=self.tokenizer)
-        self.test_dataset = MOF_ID_Dataset(data=self.test_data, tokenizer=self.tokenizer)
+        # Create datasets and data loaders
+        self.train_dataset = CustomDataset(self.train_data)
+        self.valid_dataset = CustomDataset(self.valid_data)
+        self.test_dataset = CustomDataset(self.test_data)
 
-        self.train_loader = DataLoader(
-            self.train_dataset, batch_size=self.config['batch_size'], num_workers=self.config['num_workers'],
-            shuffle=True, drop_last=False, pin_memory=False
+        self.train_loader = DataLoader(self.train_dataset, batch_size=self.config['training']['batchSize'], shuffle=True)
+        self.valid_loader = DataLoader(self.valid_dataset, batch_size=self.config['training']['batchSize'], shuffle=False)
+        self.test_loader = DataLoader(self.test_dataset, batch_size=self.config['training']['batchSize'], shuffle=False)
+
+        # Initialize model
+        self.model = TransformerModel(self.config['model'])
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.model.to(self.device)
+
+        # Optimizer and loss function
+        self.optimizer = torch.optim.Adam(
+            self.model.parameters(),
+            lr=self.config['training']['learningRate']
         )
-        self.valid_loader = DataLoader(
-            self.valid_dataset, batch_size=self.config['batch_size'], num_workers=self.config['num_workers'],
-            shuffle=False, drop_last=False, pin_memory=False
-        )
-        self.test_loader = DataLoader(
-            self.test_dataset, batch_size=self.config['batch_size'], num_workers=self.config['num_workers'],
-            shuffle=False, drop_last=False, pin_memory=False
-        )
+        self.criterion = torch.nn.CrossEntropyLoss()
 
-        self.criterion = nn.MSELoss()
-        self.normalizer = Normalizer(torch.from_numpy(self.train_dataset.label))
+    def train(self):
+        best_val_loss = float('inf')
 
-    def _get_device(self):
-        if torch.cuda.is_available() and self.config['gpu'] != 'cpu':
-            device = self.config['gpu']
-            torch.cuda.set_device(device)
-            self.config['cuda'] = True
-        else:
-            device = 'cpu'
-            self.config['cuda'] = False
-        print("Running on:", device)
-        return device
+        for epoch in range(self.config['training']['epochs']):
+            print(f"Epoch {epoch + 1}/{self.config['training']['epochs']}")
+            train_loss = train(self.model, self.train_loader, self.optimizer, self.criterion, self.device)
+            val_loss = validate(self.model, self.valid_loader, self.criterion, self.device)
 
-    # Remaining methods unchanged (train, _load_pre_trained_weights, _validate, test)
+            print(f"Train Loss: {train_loss:.4f}, Validation Loss: {val_loss:.4f}")
+
+            # Save best model
+            if val_loss < best_val_loss:
+                best_val_loss = val_loss
+                torch.save(self.model.state_dict(), os.path.join(self.log_dir, 'best_model.pth'))
+
+        print("Training complete.")
+
+    def test(self):
+        print("Testing the model...")
+        test_loss = validate(self.model, self.test_loader, self.criterion, self.device)
+        print(f"Test Loss: {test_loss:.4f}")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Transformer finetuning')
-    parser.add_argument('--seed', default=1, type=int, metavar='Seed', help='random seed for splitting data (default: 1)')
+    # Example configuration
+    config = {
+        'dataset': {
+            'dataPath': 'data/dataset.xlsx',
+            'validRatio': 0.1,
+            'testRatio': 0.1,
+            'randomSeed': 42
+        },
+        'training': {
+            'batchSize': 32,
+            'learningRate': 0.001,
+            'epochs': 20
+        },
+        'model': {
+            'inputDim': 128,
+            'hiddenDim': 256,
+            'numHeads': 4,
+            'numLayers': 2,
+            'outputDim': 10
+        }
+    }
 
-    args = parser.parse_args(sys.argv[1:])
-    config = yaml.load(open("config_ft_transformer.yaml", "r"), Loader=yaml.FullLoader)
-    print(config)
-
-    config['dataloader']['randomSeed'] = args.seed
-
-    ptw = config['trained_with']
-    seed = config['dataloader']['randomSeed']
-
-    task_name = "YOUR_TASK_NAME"  # Replace this with your task name
-    log_dir = os.path.join(
-        'training_results/finetuning/Transformer',
-        f'Trans_{config["dataset"]["data_name"]}_{args.seed}'
-    )
-
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
+    log_dir = "logs"
+    os.makedirs(log_dir, exist_ok=True)
 
     fine_tune = FineTune(config, log_dir)
     fine_tune.train()
-    loss, metric = fine_tune.test()
-
-    fn = f'Trans_{ptw}_{task_name}_{seed}.csv'
-    print(fn)
-    df = pd.DataFrame([[loss, metric.item()]])
-    df.to_csv(os.path.join(log_dir, fn), mode='a', index=False, header=False)
+    fine_tune.test()
