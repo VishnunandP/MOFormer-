@@ -3,10 +3,10 @@ import numpy as np
 import pandas as pd
 import torch
 from torch.utils.data import DataLoader
-from src.model.utils import split_data
-from src.model.transformer import Transformer, TransformerRegressor
-from src.model.dataset import CustomDataset
-from src.model.training import train, validate
+from model.utils import split_data
+from model.transformer import Transformer, TransformerRegressor
+from model.dataset import CustomDataset
+from model.training import train, validate
 
 
 class FineTune:
