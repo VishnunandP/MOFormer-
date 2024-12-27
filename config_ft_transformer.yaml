@@ -15,7 +15,6 @@ optim:
   init_lr: 0.00005
   weight_decay: 1e-6
 
-
 dataloader:
   valid_ratio: 0.15
   test_ratio: 0.15
@@ -23,15 +22,16 @@ dataloader:
   randomSeed: 1
 
 dataset:
-  # data_name: 'hMOF_CO2_0.5'
-  # dataPath: './benchmark_datasets/hMOF/mofid/hMOF_CO2_0.5_small_mofid.csv'
-  data_name: 'QMOF'
-  dataPath: './benchmark_datasets/QMOF/mofid/QMOF_small_mofid.csv'
+  data_name: 'PS_Usable_Hydrogen_Storage'
+  dataPath: './path_to_dataset/PS_Usable_Hydrogen_Storgae_Capaciti_GCMC.xlsx' # Adjust this path to match the exact location in the repo
+  feature_columns: ['column1', 'column2', 'column3']  # Replace with actual feature column names
+  target_column: 'target_column_name'                # Replace with actual target column name
 
 Transformer:
-  ntoken: 4021
+  ntoken: 4021        # Adjust if using a different tokenizer or input size
   d_model: 512
   nhead: 8
   d_hid: 512
   nlayers: 6
   dropout: 0.1
+
