@@ -75,7 +75,7 @@ if __name__ == "__main__":
     # Example configuration
     config = {
         'dataset': {
-            'dataPath': 'data/dataset.xlsx',
+            'dataPath': 'PS_Usable_Hydrogen_Storgae_Capaciti_GCMC (1).xlsx',
             'validRatio': 0.1,
             'testRatio': 0.1,
             'randomSeed': 42
