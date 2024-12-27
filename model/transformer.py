@@ -101,9 +101,10 @@ class TransformerRegressor(nn.Module):
         # self.init_weights()
 
     def init_weights(self) -> None:
-        # initrange = 0.1
-        # self.encoder.weight.data.uniform_(-initrange, initrange)
-        nn.init.xavier_normal_(self.regressionHead.weight)
+        for layer in self.regressionHead.modules():
+            if isinstance(layer, nn.Linear):
+                nn.init.xavier_normal_(layer.weight)
+
 
     def forward(self, src: Tensor) -> Tensor:
         """
