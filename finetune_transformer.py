@@ -7,7 +7,8 @@ from model.utils import split_data
 from model.transformer import Transformer, TransformerRegressor
 
 from model.dataset import CustomDataset
-from model.training import train, validate
+from src.model.training import train, validate
+
 
 class FineTune:
     def __init__(self, config, log_dir):
