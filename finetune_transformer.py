@@ -28,9 +28,9 @@ class FineTune:
         # Split data into train, validation, and test sets
         train_idx, valid_idx, test_idx = split_data(
             self.data,
-            valid_ratio=self.config['dataset']['validRatio'],
-            test_ratio=self.config['dataset']['testRatio'],
-            random_seed=self.config['dataset']['randomSeed']
+            self.config['dataset']['validRatio'],
+            self.config['dataset']['testRatio'],
+            self.config['dataset']['randomSeed']  # Removed keyword argument
         )
 
         self.train_data = self.data.iloc[train_idx]
