@@ -54,13 +54,16 @@ class FineTune:
         self.test_loader = DataLoader(self.test_dataset, batch_size=self.config['training']['batchSize'], shuffle=False)
 
         # Initialize model
+        # Initialize model
         self.model = Transformer(
-            input_dim=self.config['model']['inputDim'],
-            hidden_dim=self.config['model']['hiddenDim'],
-            num_heads=self.config['model']['numHeads'],
-            num_layers=self.config['model']['numLayers'],
-            output_dim=self.config['model']['outputDim']
+            ntoken=self.config['model']['ntoken'],  # Set the vocabulary size
+            d_model=self.config['model']['d_model'],  # Embedding dimension
+            nhead=self.config['model']['nhead'],  # Number of attention heads
+            d_hid=self.config['model']['d_hid'],  # Hidden layer size in the feedforward network
+            nlayers=self.config['model']['nlayers'],  # Number of Transformer layers
+            dropout=self.config['model']['dropout']  # Dropout probability
         )
+
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model.to(self.device)
 
