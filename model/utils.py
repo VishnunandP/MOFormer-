@@ -60,25 +60,28 @@ def mse(prediction, target):
 #       train_idx, valid_idx = indices[split:], indices[:split]
 
 #       return data[train_idx], data[valid_idx]
-def split_data(data, test_ratio, valid_ratio, use_ratio=1, randomSeed = None):
+def split_data(data, test_ratio, valid_ratio, use_ratio=1, randomSeed=None):
     total_size = len(data)
     train_ratio = 1 - valid_ratio - test_ratio
     indices = list(range(total_size))
     print("The random seed is: ", randomSeed)
     np.random.seed(randomSeed)
     np.random.shuffle(indices)
+    
     train_size = int(train_ratio * total_size)
     valid_size = int(valid_ratio * total_size)
     test_size = int(test_ratio * total_size)
     print('Train size: {}, Validation size: {}, Test size: {}'.format(
-    train_size, valid_size, test_size
+        train_size, valid_size, test_size
     ))
 
-    train_idx, valid_idx, test_idx = indices[:train_size], indices[-(valid_size + test_size):-test_size], indices[-test_size:]
+    train_idx = indices[:train_size]
+    valid_idx = indices[-(valid_size + test_size):-test_size]
+    test_idx = indices[-test_size:]
 
+    # Use .iloc for DataFrame indexing
+    return data.iloc[train_idx], data.iloc[valid_idx], data.iloc[test_idx]
 
-
-    return data[train_idx], data[valid_idx], data[test_idx]
 
 def split_data_subset(data, test_ratio, valid_ratio, subset_size=500, randomSeed = None):
     total_size = len(data)
