@@ -77,14 +77,13 @@ class FineTune:
     def split_features_labels(self, data):
         """
         Splits the dataset into features and labels.
-
         :param data: Pandas DataFrame
         :return: features (Pandas DataFrame), labels (Pandas Series)
         """
-        # Assuming the label column is the last column
-        features = data.iloc[:, :-1]
-        labels = data.iloc[:, -1]
+        features = data.drop(columns=['target'])  # Replace 'target' with the actual label column name
+        labels = data['target']  # Replace 'target' with the actual label column name
         return features, labels
+
 
     def train(self):
         best_val_loss = float('inf')
