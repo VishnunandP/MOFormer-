@@ -3,10 +3,9 @@ import numpy as np
 import pandas as pd
 import torch
 from torch.utils.data import DataLoader
-from model.utils import split_data
-from model.transformer import Transformer, TransformerRegressor
+from model.utils import split_data, train, validate
+from model.transformer import Transformer
 from model.dataset import CustomDataset
-from model.utils import train, validate
 
 
 class FineTune:
@@ -15,17 +14,33 @@ class FineTune:
         self.log_dir = log_dir
 
         # Load data
-        self.data = pd.read_excel(self.config['dataset']['dataPath'])
+        try:
+            self.data = pd.read_excel(self.config['dataset']['dataPath'])
+            print(f"Dataset loaded successfully: {self.data.shape[0]} rows, {self.data.shape[1]} columns.")
+        except FileNotFoundError:
+            raise FileNotFoundError(f"Dataset file not found at {self.config['dataset']['dataPath']}.")
+        except Exception as e:
+            raise ValueError(f"Error loading dataset: {e}")
 
         # Ensure consistent indexing
         self.data.reset_index(drop=True, inplace=True)
 
         # Split data into train, validation, and test sets
-        self.train_data, self.valid_data, self.test_data = split_data(
+        train_idx, valid_idx, test_idx = split_data(
             self.data,
             valid_ratio=self.config['dataset']['validRatio'],
             test_ratio=self.config['dataset']['testRatio'],
-            randomSeed=self.config['dataset']['randomSeed']
+            random_seed=self.config['dataset']['randomSeed']
+        )
+
+        self.train_data = self.data.iloc[train_idx]
+        self.valid_data = self.data.iloc[valid_idx]
+        self.test_data = self.data.iloc[test_idx]
+
+        print(
+            f"Train size: {len(self.train_data)}, "
+            f"Validation size: {len(self.valid_data)}, "
+            f"Test size: {len(self.test_data)}"
         )
 
         # Create datasets and data loaders
@@ -38,7 +53,13 @@ class FineTune:
         self.test_loader = DataLoader(self.test_dataset, batch_size=self.config['training']['batchSize'], shuffle=False)
 
         # Initialize model
-        self.model = Transformer(self.config['model'])  # Updated to match Transformer initialization
+        self.model = Transformer(
+            input_dim=self.config['model']['inputDim'],
+            hidden_dim=self.config['model']['hiddenDim'],
+            num_heads=self.config['model']['numHeads'],
+            num_layers=self.config['model']['numLayers'],
+            output_dim=self.config['model']['outputDim']
+        )
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model.to(self.device)
 
@@ -70,6 +91,7 @@ class FineTune:
         print("Testing the model...")
         test_loss = validate(self.model, self.test_loader, self.criterion, self.device)
         print(f"Test Loss: {test_loss:.4f}")
+
 
 if __name__ == "__main__":
     # Example configuration
