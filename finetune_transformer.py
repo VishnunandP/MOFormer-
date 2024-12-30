@@ -26,16 +26,12 @@ class FineTune:
         self.data.reset_index(drop=True, inplace=True)
 
         # Split data into train, validation, and test sets
-        train_idx, valid_idx, test_idx = split_data(
+        self.train_data, self.valid_data, self.test_data = split_data(
             self.data,
-            self.config['dataset']['validRatio'],
             self.config['dataset']['testRatio'],
-            self.config['dataset']['randomSeed']  # Removed keyword argument
+            self.config['dataset']['validRatio'],
+            randomSeed=self.config['dataset']['randomSeed']
         )
-
-        self.train_data = self.data.iloc[train_idx]
-        self.valid_data = self.data.iloc[valid_idx]
-        self.test_data = self.data.iloc[test_idx]
 
         print(
             f"Train size: {len(self.train_data)}, "
