@@ -124,13 +124,15 @@ if __name__ == "__main__":
             'epochs': 20
         },
         'model': {
-            'inputDim': 128,
-            'hiddenDim': 256,
-            'numHeads': 4,
-            'numLayers': 2,
-            'outputDim': 10
-        }
-    }
+            'ntoken': 10000,  # Vocabulary size (adjust based on your tokenizer)
+            'd_model': 128,   # Embedding size
+            'nhead': 4,       # Number of attention heads
+            'd_hid': 256,     # Hidden size in feedforward network
+            'nlayers': 2,     # Number of Transformer layers
+            'dropout': 0.1    # Dropout probability
+     }
+}
+
 
     log_dir = "logs"
     os.makedirs(log_dir, exist_ok=True)
