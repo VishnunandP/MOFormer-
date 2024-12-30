@@ -39,10 +39,15 @@ class FineTune:
             f"Test size: {len(self.test_data)}"
         )
 
+        # Separate features and labels
+        train_features, train_labels = self.split_features_labels(self.train_data)
+        valid_features, valid_labels = self.split_features_labels(self.valid_data)
+        test_features, test_labels = self.split_features_labels(self.test_data)
+
         # Create datasets and data loaders
-        self.train_dataset = CustomDataset(self.train_data)
-        self.valid_dataset = CustomDataset(self.valid_data)
-        self.test_dataset = CustomDataset(self.test_data)
+        self.train_dataset = CustomDataset(train_features.values, train_labels.values)
+        self.valid_dataset = CustomDataset(valid_features.values, valid_labels.values)
+        self.test_dataset = CustomDataset(test_features.values, test_labels.values)
 
         self.train_loader = DataLoader(self.train_dataset, batch_size=self.config['training']['batchSize'], shuffle=True)
         self.valid_loader = DataLoader(self.valid_dataset, batch_size=self.config['training']['batchSize'], shuffle=False)
@@ -65,6 +70,18 @@ class FineTune:
             lr=self.config['training']['learningRate']
         )
         self.criterion = torch.nn.CrossEntropyLoss()
+
+    def split_features_labels(self, data):
+        """
+        Splits the dataset into features and labels.
+
+        :param data: Pandas DataFrame
+        :return: features (Pandas DataFrame), labels (Pandas Series)
+        """
+        # Assuming the label column is the last column
+        features = data.iloc[:, :-1]
+        labels = data.iloc[:, -1]
+        return features, labels
 
     def train(self):
         best_val_loss = float('inf')
