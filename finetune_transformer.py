@@ -80,8 +80,8 @@ class FineTune:
         :param data: Pandas DataFrame
         :return: features (Pandas DataFrame), labels (Pandas Series)
         """
-        features = data.drop(columns=['target_column'])  # Replace 'target' with the actual label column name
-        labels = data['target_column']  # Replace 'target' with the actual label column name
+        features = data.drop(columns=['Usable Volumetric Hydrogen Capacity at 77K for the pressure swing between 100 and 5 bar (g/L)'])  # Replace 'target' with the actual label column name
+        labels = data['Usable Volumetric Hydrogen Capacity at 77K for the pressure swing between 100 and 5 bar (g/L)']  # Replace 'target' with the actual label column name
         return features, labels
 
 
